@@ -10,22 +10,21 @@
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
   html,body{
-    /* 核心修改1：移除body的padding，改为内部容器padding，保证html/body占满全屏 */
     padding: 0;
     margin: 0;
-    min-height: 100vh; /* 确保高度占满视口 */
+    min-height: 100vh;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-    background:#fff;
-    color:#222;
-    -webkit-text-size-adjust: 100%; /* 修复iOS字体缩放问题 */
+    -webkit-text-size-adjust: 100%;
   }
-  /* 核心修改2：新增容器类，承载内容并设置内边距，替代body的padding */
-  .container {
-    max-width:500px;
-    margin:0 auto;
-    padding:14px;
-    min-height: 100vh; /* 容器高度占满视口 */
-    background: var(--bg-main); /* 继承主题背景色 */
+  /* 核心修复1：初始化根元素默认样式，解决首次打开颜色渲染错误 */
+  :root {
+    --bg-main: #fff;
+    --bg-input: #fafafa;
+    --bg-show: #f5f5f5;
+    --bg-btn: #f8f8f8;
+    --text-main: #222;
+    --border-main: #ddd;
+    --primary-color: #007AFF;
   }
   :root.dark {
     --bg-main: #1c1c1e;
@@ -46,7 +45,7 @@
     --primary-color: #007AFF;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not(.light):not(.dark) {
       --bg-main: #1c1c1e;
       --bg-input: #2c2c2e;
       --bg-show: #2c2c2e;
@@ -57,8 +56,16 @@
     }
   }
   body{
-    background:var(--bg-main); /* 背景色继承主题变量 */
+    background:var(--bg-main);
     color:var(--text-main);
+  }
+  .container {
+    max-width:500px;
+    margin:0 auto;
+    /* 核心修复2：增加顶部内边距，避免iOS上按钮与文本框重叠 */
+    padding: 50px 14px 14px;
+    min-height: 100vh;
+    background: var(--bg-main);
   }
   .box{margin-bottom:20px;}
   h4{font-size:18px;margin:0 0 10px 0;display:flex;align-items:center;gap:6px;}
@@ -72,7 +79,7 @@
     background:var(--bg-input);
     color:var(--text-main);
     margin-bottom:10px;
-    -webkit-appearance: none; /* 移除iOS默认样式 */
+    -webkit-appearance: none;
     appearance: none;
   }
   textarea{resize:none;height:100px;line-height:1.5;}
@@ -85,7 +92,7 @@
     font-size:16px;
     cursor:pointer;
     margin:4px 0;
-    -webkit-appearance: none; /* 移除iOS默认样式 */
+    -webkit-appearance: none;
     appearance: none;
   }
   .btn-row{display:flex;gap:8px;margin:8px 0;}
@@ -102,9 +109,11 @@
     padding:8px 12px;
     border-radius:8px;
     font-size:14px;
-    z-index: 999; /* 确保按钮在最上层 */
+    z-index: 999;
+    /* 优化按钮样式，增强可读性 */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   }
-  /* 核心修改3：历史记录页面同步全屏样式 */
+  /* 历史记录页面样式优化 */
   .history-page html, .history-page body {
     padding:0;
     margin:0;
@@ -113,14 +122,27 @@
   .history-page .container {
     max-width:500px;
     margin:0 auto;
-    padding:14px;
-    min-height:100vh;
+    padding: 14px;
+    min-height: 100vh;
     background:var(--bg-main);
+  }
+  /* 返回按钮样式 */
+  .back-btn {
+    margin-bottom: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-btn);
+    color: var(--text-main);
+    border: 1px solid var(--border-main);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
   }
 </style>
 </head>
 <body>
-<!-- 核心修改4：添加container容器包裹所有内容 -->
 <div class="container">
   <button class="mode-toggle btn-secondary" onclick="toggleDarkMode()">切换深色模式</button>
 
@@ -173,8 +195,21 @@ function toggleDarkMode() {
 function initDarkMode() {
   const savedMode = localStorage.getItem('darkMode');
   const root = document.documentElement;
-  if (savedMode === 'dark') root.classList.add('dark');
-  else if (savedMode === 'light') root.classList.add('light');
+  // 核心修复：确保初始化时必有样式类，解决渲染错误
+  if (savedMode === 'dark') {
+    root.classList.add('dark');
+    root.classList.remove('light');
+  } else if (savedMode === 'light') {
+    root.classList.add('light');
+    root.classList.remove('dark');
+  } else {
+    // 无保存状态时，根据系统偏好设置默认类
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      root.classList.add('dark');
+    } else {
+      root.classList.add('light');
+    }
+  }
 }
 
 function getToday() {
@@ -266,12 +301,16 @@ function openHistoryPage() {
     --text-main: #fff;
     --border-main: #444;
     --bg-item: #2c2c2e;
+    --bg-btn: #2c2c2e;
+    --primary-color: #007AFF;
   }
   :root.light {
     --bg-main: #fff;
     --text-main: #222;
     --border-main: #ddd;
     --bg-item: #f5f5f5;
+    --bg-btn: #f8f8f8;
+    --primary-color: #007AFF;
   }
   body{background:var(--bg-main);color:var(--text-main);}
   .container {
@@ -287,10 +326,25 @@ function openHistoryPage() {
   .history-content{font-size:14px;line-height:1.5;}
   .empty{text-align:center;padding:20px;font-size:16px;color:#888;}
   button{margin-top:20px;padding:10px 16px;border:none;border-radius:8px;background:#007AFF;color:white;font-size:15px;-webkit-appearance: none;appearance: none;}
+  .back-btn {
+    margin-bottom: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-btn);
+    color: var(--text-main);
+    border: 1px solid var(--border-main);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
 <div class="container">
+  <!-- 新增返回按钮 -->
+  <button class="back-btn" onclick="window.close()">← 返回</button>
   <h4>📜 每日目标历史记录</h4>
   ${history.length === 0 ? '<div class="empty">暂无历史记录</div>' : ''}
   ${history.map(item => {
@@ -323,6 +377,7 @@ function init() {
     localStorage.removeItem('taskStatus');
     localStorage.setItem('lastUseDay', today);
   }
+  // 优先初始化深色模式，再渲染其他内容
   initDarkMode();
   renderStatusBtn();
   updateResultTitle();
